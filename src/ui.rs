@@ -42,7 +42,7 @@ pub fn start(args: &mut [String]) {
     #[cfg(all(target_os = "linux", feature = "inline"))]
     {
         let app_dir = std::env::var("APPDIR").unwrap_or("".to_string());
-        let mut so_path = "/usr/lib/rustdesk/libsciter-gtk.so".to_owned();
+        let mut so_path = "/usr/share/rustdesk/libsciter-gtk.so".to_owned();
         for (prefix, dir) in [
             ("", "/usr"),
             ("", "/app"),
@@ -51,7 +51,7 @@ pub fn start(args: &mut [String]) {
         ]
         .iter()
         {
-            let path = format!("{prefix}{dir}/lib/rustdesk/libsciter-gtk.so");
+            let path = format!("{prefix}{dir}/share/rustdesk/libsciter-gtk.so");
             if std::path::Path::new(&path).exists() {
                 so_path = path;
                 break;
@@ -310,6 +310,10 @@ impl UI {
 
     fn install_path(&mut self) -> String {
         install_path()
+    }
+
+    fn install_options(&self) -> String {
+        install_options()
     }
 
     fn get_socks(&self) -> Value {
@@ -629,6 +633,10 @@ impl UI {
     pub fn verify2fa(&self, code: String) -> bool {
         verify2fa(code)
     }
+        
+    fn verify_login(&self, raw: String, id: String) -> bool {
+       crate::verify_login(&raw, &id)
+    }
 
     fn generate_2fa_img_src(&self, data: String) -> String {
         let v = qrcode_generator::to_png_to_vec(data, qrcode_generator::QrCodeEcc::Low, 128)
@@ -683,6 +691,7 @@ impl sciter::EventHandler for UI {
         fn set_share_rdp(bool);
         fn is_installed_lower_version();
         fn install_path();
+        fn install_options();
         fn goto_install();
         fn is_process_trusted(bool);
         fn is_can_screen_recording(bool);
@@ -734,6 +743,7 @@ impl sciter::EventHandler for UI {
         fn generate_2fa_img_src(String);
         fn verify2fa(String);
         fn check_hwcodec();
+        fn verify_login(String, String);
     }
 }
 
