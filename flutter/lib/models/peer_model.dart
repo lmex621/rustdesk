@@ -19,6 +19,7 @@ class Peer {
   String rdpUsername;
   bool online = false;
   String loginName; //login username
+  String device_group_name;
   bool? sameServer;
 
   String getId() {
@@ -41,6 +42,7 @@ class Peer {
         rdpPort = json['rdpPort'] ?? '',
         rdpUsername = json['rdpUsername'] ?? '',
         loginName = json['loginName'] ?? '',
+        device_group_name = json['device_group_name'] ?? '',
         sameServer = json['same_server'];
 
   Map<String, dynamic> toJson() {
@@ -57,6 +59,7 @@ class Peer {
       "rdpPort": rdpPort,
       "rdpUsername": rdpUsername,
       'loginName': loginName,
+      'device_group_name': device_group_name,
       'same_server': sameServer,
     };
   }
@@ -83,6 +86,7 @@ class Peer {
       "hostname": hostname,
       "platform": platform,
       "login_name": loginName,
+      "device_group_name": device_group_name,
     };
   }
 
@@ -99,6 +103,7 @@ class Peer {
     required this.rdpPort,
     required this.rdpUsername,
     required this.loginName,
+    required this.device_group_name,
     this.sameServer,
   });
 
@@ -116,6 +121,7 @@ class Peer {
           rdpPort: '',
           rdpUsername: '',
           loginName: '',
+          device_group_name: '',
         );
   bool equal(Peer other) {
     return id == other.id &&
@@ -129,6 +135,7 @@ class Peer {
         forceAlwaysRelay == other.forceAlwaysRelay &&
         rdpPort == other.rdpPort &&
         rdpUsername == other.rdpUsername &&
+        device_group_name == other.device_group_name &&
         loginName == other.loginName;
   }
 
@@ -146,6 +153,7 @@ class Peer {
             rdpPort: other.rdpPort,
             rdpUsername: other.rdpUsername,
             loginName: other.loginName,
+            device_group_name: other.device_group_name,
             sameServer: other.sameServer);
 }
 
@@ -194,10 +202,14 @@ class Peers extends ChangeNotifier {
   }
 
   void _updateOnlineState(Map<String, dynamic> evt) {
+    int changedCount = 0;
     evt['onlines'].split(',').forEach((online) {
       for (var i = 0; i < peers.length; i++) {
         if (peers[i].id == online) {
-          peers[i].online = true;
+          if (!peers[i].online) {
+            changedCount += 1;
+            peers[i].online = true;
+          }
         }
       }
     });
@@ -205,13 +217,18 @@ class Peers extends ChangeNotifier {
     evt['offlines'].split(',').forEach((offline) {
       for (var i = 0; i < peers.length; i++) {
         if (peers[i].id == offline) {
-          peers[i].online = false;
+          if (peers[i].online) {
+            changedCount += 1;
+            peers[i].online = false;
+          }
         }
       }
     });
 
-    event = UpdateEvent.online;
-    notifyListeners();
+    if (changedCount > 0) {
+      event = UpdateEvent.online;
+      notifyListeners();
+    }
   }
 
   void _updatePeers(Map<String, dynamic> evt) {
